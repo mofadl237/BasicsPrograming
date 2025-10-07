@@ -1,0 +1,6 @@
+﻿  Bank.cpp
+D:\Basics\FundamentalPrograming\C++\Bank\ServicesLibrary.h(25,25): warning C4267: '=': conversion from 'size_t' to 'short', possible loss of data
+  (compiling source file 'Bank.cpp')
+  
+D:\Basics\FundamentalPrograming\C++\Bank\Bank.cpp(102,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Bank.vcxproj -> D:\Basics\FundamentalPrograming\C++\Bank\x64\Debug\Bank.exe
