@@ -42,17 +42,34 @@ namespace ServicesFunction {
 		}
 		cout << "\n\n";
 	}
-	void printHeader(string str, char c, int count=50) {
-		system("cls");
+	void printHeader(string str, char c, int count=50 ) {
+		
+			system("cls");
+		
 		printShapeHeader(c, count);
 		cout << "\t"<<str;
 		printShapeHeader(c, count);
 	}
 	int readChooseNumber() {
 		int number;
-		cout << "Choose What Do You Want To Do [1 To 6] ?";
+		cout << "\n=======================================\n";
+		cout << "Choose What Do You Want To Do [1 To 7] ?";
 		cin >> number;
-		while (cin.fail()  || number < 1 || number > 6) {
+		while (cin.fail()  || number < 1 || number > 7) {
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			cout << "Enter Valid Number => ";
+			cin >> number;
+		}
+		return number;
+	}
+	int readChooseTransactionNumber() {
+		int number;
+		cout << "\n=======================================\n";
+
+		cout << "Choose What Do You Want To Do [1 To 4] ?";
+		cin >> number;
+		while (cin.fail() || number < 1 || number > 4) {
 			cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			cout << "Enter Valid Number => ";

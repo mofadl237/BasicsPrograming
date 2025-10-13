@@ -1,5 +1,3 @@
-// Bank.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 #include <iostream>
 #include <iomanip>
@@ -24,15 +22,16 @@ enum enShowMenue {
 	eDeleteClinet=3,
 	eUpdateClient=4,
 	eFindClient=5,
-	eExit=6,
+	eTransaction=6,
+	eExit=7,
 };
+enum enTransactionMenue{eDeposite=1,eWithdrow=2,eTotalBalance=3,eMainMenue=4};
+enum enOperation{eOperationDeposite=1,eOperationWithdrow=2};
 string FileName = "Clients.txt";
-
 void showMainMenue();
 bool findClients(string AccName, vector <stClient> vec, stClient& client);
 void loadDataFromFileToVector(string FileName, vector <string>& vec);
 void loadDataFromFileToVector(string FileName, vector <stClient>& vec);
-
 string convertStructToString(stClient client, string delim = "#//#");
 stClient convertStringToStruct(string str, string delim = "#//#");
 void SaveRecordInFile(string FileName, string line);
@@ -41,7 +40,6 @@ void addClient();
 void addAllClients();
 stClient readClient();
 stClient changeClient(string accNumber);
-
 void printClient(stClient client);
 void printHeaderShowList(int number);
 void showClients();
@@ -55,7 +53,9 @@ void chooseAnyFunction(enShowMenue Chose);
 void PrintShowList();
 void printClientRow(stClient client);
 void printSentenceClient(string str, int number =10);
-
+void showTransactionMenue();
+void chooseAnyFunctionTransaction(enTransactionMenue transaction);
+void printClientRowTotlaBalance(stClient client);
 int main()
 {
 	showMainMenue();
@@ -96,6 +96,20 @@ void printHeaderShowList(int number) {
 	printSentenceClient("Balance", 15);
 	printShapeHeader('-', 110);
 }
+void printHeaderShowListTotalBaance(int number) {
+	string headerShowList = "\n\t\t\t\tClients(" + to_string(number) + ").";
+	if (number == 0) {
+		printHeader("\n\t\t\tNot Clients Available .", '=', 100);
+		return;
+	}
+	printHeader(headerShowList, '=', 80);
+	printShapeHeader('-', 90);
+	printSentenceClient("Account Number", 18);
+	printSentenceClient("Name", 40);
+
+	printSentenceClient("Balance", 18);
+	printShapeHeader('-', 90);
+}
 void PrintShowList() {
 	vector <string> vClients;
 	loadDataFromFileToVector(FileName, vClients);
@@ -104,6 +118,20 @@ void PrintShowList() {
 		printClientRow(convertStringToStruct(client));
 		cout << endl;
 	}
+}
+void printTotalBalance() {
+	vector <stClient> vClients;
+	double totalBlance = 0;
+	loadDataFromFileToVector(FileName, vClients);
+	printHeaderShowListTotalBaance(vClients.size());
+	for (stClient& client : vClients) {
+		printClientRowTotlaBalance(client);
+		totalBlance += client.accBalance;
+		cout << endl;
+	}
+	string header = "\n\t\t\tTotal Balance = " + to_string(totalBlance) + "\n";
+	cout << "\n------------------------------------------------------------------\n" << header <<
+		"\n------------------------------------------------------------------\n";
 }
 void printSentenceClient(string str, int number ) {
 	cout << "| " << setw(number) << left << str;
@@ -114,6 +142,11 @@ void printClientRow(stClient client) {
 	printSentenceClient(client.Name, 40);
 	printSentenceClient(client.Phone, 15);
 	printSentenceClient(to_string(client.accBalance), 15);
+}
+void printClientRowTotlaBalance(stClient client) {
+	printSentenceClient(client.accNumber, 18);
+	printSentenceClient(client.Name, 40);
+	printSentenceClient(to_string(client.accBalance), 18);
 }
  string convertStructToString(stClient client, string delim ) {
 	return client.accNumber + delim + client.pinCode + delim + client.Name + delim + client.Phone + delim + to_string(client.accBalance);
@@ -172,6 +205,7 @@ void loadDataFromFileToVector(string FileName, vector <stClient>& vec) {
 	if (myFile.is_open()) {
 		while (getline(myFile, line)) {
 			tempClient = convertStringToStruct(line);
+			tempClient.markDeleted = false;
 			vec.push_back(tempClient);
 		}
 		myFile.close();
@@ -294,12 +328,12 @@ void showUpdateClient() {
 	cin >> accNumber;
 	if (findClients(accNumber ,vClients,tempClient) ) {
 		printClient(tempClient);
-		cout << "Do You Sure Change Data ?";
+		cout << "Do You Sure Change Data ? (Y|N) ";
 		cin >> update;
 		if (update) {
 			updateClient(accNumber, vClients);
 			SaveDataInFile(FileName, vClients);
-			cout << "Changed Data Success!!";
+			cout << "Changed Data Success!!\n";
 
 		}
 		else {
@@ -329,9 +363,80 @@ void showExit() {
 	printHeader("Program Ends.", '-');
 }
 void goBackToMain() {
+	cout << "\n========================================\n";
+
 	cout << "Enter Any Key To return ...";
 	system("pause>0");
 	showMainMenue();
+}
+void showDepositeOrWithDrow(string Operation, enOperation operand) {
+	short numberTry=0;
+	double number = 0;
+	stClient tempClient;
+	vector<stClient>vClient;
+	string accNumber = "";
+	bool status = false;
+	loadDataFromFileToVector(FileName, vClient);
+	printHeader(Operation, '-');
+	cout << "\n\tEnter accNumber ?";
+	getline(cin >> ws, accNumber);
+	while( !(status = findClients(accNumber, vClient, tempClient)) && numberTry <2 ){
+		numberTry++;
+		cout << "Not Found ! Try Number ="<<to_string(3 - numberTry)<<"\tEnter Valid accNumber ? ";
+		getline(cin >> ws, accNumber);
+
+	}
+	if (status) {
+		printClient(tempClient);
+		cout << "\n\t\tEnter Number You "<<Operation<<" ? ";
+		cin >> number;
+		switch(operand) {
+		case enOperation::eOperationDeposite: {
+				tempClient.accBalance += number;
+				break;
+			}
+			case enOperation::eOperationWithdrow: {
+				while (number > tempClient.accBalance) {
+					cout << "\nNot WithDrow Your Account Balance Is [" << tempClient.accBalance << "] Enter Less Than Number ?";
+					cin >> number;
+				};
+				tempClient.accBalance -= number;
+				break;
+			}
+		}
+		for (stClient& client : vClient) {
+			
+			if (client.accNumber == accNumber) {
+				client = tempClient;
+				break;
+			}
+		}
+		SaveDataInFile(FileName, vClient);
+	}
+	else {
+
+	cout << "\n\tAcc Number [" << accNumber << "] Not Founded!!. ";
+	}
+		
+	
+}
+void showTotalBalance() {
+	printHeader("Total Balance.", '-');
+	printTotalBalance();
+}
+void showTransactionMenue() {
+	printHeader("Transaction Menue.", '=');
+	cout << "\n [1] Deposite.\n";
+	cout << " [2] Withdrow.\n";
+	cout << " [3] Total Balance.\n";
+	cout << " [4] Main Menue.\n";
+	chooseAnyFunctionTransaction((enTransactionMenue)readChooseTransactionNumber());
+}
+void goToBackTransaction() {
+	cout << "\n=================================================\n";
+	cout << "Enter Any Key To return Transaction Menue...";
+	system("pause>0");
+	showTransactionMenue();
 }
 void chooseAnyFunction(enShowMenue Chose) {
 	switch (Chose) {
@@ -356,8 +461,36 @@ void chooseAnyFunction(enShowMenue Chose) {
 		showFindClient();
 		goBackToMain();
 		break;
-	}case eExit: {
+	}case eTransaction: {
+		showTransactionMenue();
+		/*goBackToMain();*/
+		break;
+	}
+	case eExit: {
 		showExit();
+		break;
+	}
+	}
+}
+void chooseAnyFunctionTransaction(enTransactionMenue transaction) {
+	switch(transaction) {
+	case eDeposite: {
+		showDepositeOrWithDrow("Deposite",(enOperation)eDeposite);
+		goToBackTransaction();
+		break;
+	}
+	case eWithdrow: {
+		showDepositeOrWithDrow("Withdrow", (enOperation)eWithdrow);
+		goToBackTransaction();
+		break;
+	}
+	case eTotalBalance: {
+		showTotalBalance();
+		goToBackTransaction();
+		break;
+	}
+	case eMainMenue: {
+		showMainMenue();
 		break;
 	}
 	}
@@ -365,11 +498,12 @@ void chooseAnyFunction(enShowMenue Chose) {
 void showMainMenue() {
 
 	printHeader("Main Menue Screen.", '=');
-	cout << "\n [1] Show Clients .\n";
-	cout << " [2] Add Clients .\n";
-	cout << " [3] Delete Client .\n";
-	cout << " [4] Update Client .\n";
-	cout << " [5] Find Clients .\n";
-	cout << " [6] Exit .\n\n";
+	cout << "\n [1] Show Clients.\n";
+	cout << " [2] Add Clients.\n";
+	cout << " [3] Delete Client.\n";
+	cout << " [4] Update Client.\n";
+	cout << " [5] Find Clients.\n";
+	cout << " [6] Transaction.\n";
+	cout << " [7] Exit.\n\n";
 	chooseAnyFunction((enShowMenue)readChooseNumber());
 }
